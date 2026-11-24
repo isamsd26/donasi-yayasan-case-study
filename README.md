@@ -35,22 +35,31 @@ Previously, donation collection relied on manual chat confirmations, bank mutati
 ## System Architecture
 
 ```mermaid
-flowchart LR
-    Donor["Donor / Public User"] -->|"Browse & Donate"| App["Laravel 12 Application"]
-    Admin["Foundation Admin"] -->|"CMS & Verification (/admin)"| App
+flowchart TD
+    subgraph Clients["Users"]
+        Donor["Public Donor"]
+        Admin["Foundation Admin"]
+    end
 
-    App -->|"Eloquent ORM"| DB[("MariaDB / MySQL")]
-    App -->|"Snap / Payment API"| Midtrans["Midtrans Payment Gateway"]
-    Midtrans -->|"POST /api/midtrans/notification"| App
+    subgraph Core["Core Application"]
+        App["Laravel 12 Application"]
+        DB[("MariaDB / MySQL")]
+        Reports["DomPDF & Excel Reports"]
+    end
 
-    App -->|"MetaWaService (Graph API v19.0)"| MetaWA["Meta WhatsApp Cloud API"]
-    MetaWA -->|"Pending & Paid Templates"| Donor
-    MetaWA -->|"New Donation Alert"| Admin
+    subgraph External["External Services & CI/CD"]
+        Midtrans["Midtrans Payment Gateway"]
+        MetaWA["Meta WhatsApp Cloud API"]
+        GitHub["GitHub Actions SSH Deploy"]
+    end
 
-    App -->|"DomPDF"| Invoice["PDF Donor Invoice"]
-    App -->|"Maatwebsite Excel"| Excel["Financial Report (.xlsx)"]
-
-    GitHub["GitHub (main branch)"] -->|"GitHub Actions SSH Deploy"| App
+    Donor -->|Browse & Donate| App
+    Admin -->|CMS & Verification| App
+    App -->|Eloquent ORM| DB
+    App -->|Invoice & Financial Export| Reports
+    App <-->|Snap API & Webhook| Midtrans
+    App -->|Pending & Paid Templates| MetaWA
+    GitHub -->|Automated Production Deploy| App
 ```
 
 ---
